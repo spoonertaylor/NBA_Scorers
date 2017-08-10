@@ -1,5 +1,5 @@
 # Goal: Continue with the analysis, cluster the data.
-setwd("C:/Users/Taylor/Documents/Projects/NBA_Scorers/")
+setwd("C:/Users/Taylor/Documents/Projects/NBA_Scorers/Code/")
 source('data collection.R')
 library(dplyr)
 library(plyr)

@@ -1,6 +1,6 @@
 # Goal: Scrape the data from stats.nba.com
 library(stringr)
-setwd("C:/Users/Taylor/Documents/Projects/NBA_Scorers/")
+setwd("C:/Users/Taylor/Documents/Projects/NBA_Scorers/Code/")
 #################
 # Unfortunatly was having problems scraping the data from stats.nba.com
 # Copy and pasted each page into a txt file
