@@ -1,6 +1,6 @@
 # Goal: Scrape the data from stats.nba.com
 library(stringr)
-setwd("C:/Users/Taylor/Documents/Projects/NBA_Scorers/Code/")
+setwd("C:/Users/Taylor/Documents/Projects/NBA_Scorers/")
 #################
 # Unfortunatly was having problems scraping the data from stats.nba.com
 # Copy and pasted each page into a txt file
@@ -26,14 +26,14 @@ get_data = function() {
   scores = c("transition", "isolation", "ball_handler", "roll_man", "post_up", "spot_up",
             "hand_off", "cut", "off_screen", "putbacks")
   # Sort both lists so the names line up
-  files = sort(list.files(pattern = "*.txt"))
+  files = sort(list.files(path = "Data/", pattern = "*.txt"))
   scores = sort(scores)
   
   df_list = list()
   # Now read in each file, add data to data frame
   for(i in 1:length(files)) {
     # Read in first file
-    f = file(files[i], "r")
+    f = file(paste0("Data/", files[i]), "r")
     # Create a new dataframe
     df = create_df()
     # Read line by line, this is all by how the file was copied
