@@ -161,5 +161,140 @@ cuts18 = cutree(clust, 18)
 
 clusts = list()
 for(i in 1:18) {
-  clusts[i] = names(cuts18[which(cuts18 == i)])
+  clusts[[i]] = names(cuts18[which(cuts18 == i)])
 }
+
+# Find "Go to Plays" for each of the 18 clusters
+#  The "go-to" play types were any for which the
+# group average frequency exceeded the overall league average by at least 50 percent.
+
+## League average frequency for each of the 8 play types
+league_avgs = colSums(df_new)
+league_avgs[1:(length(league_avgs)-1)] = league_avgs[1:(length(leage_avgs - 1))] / leage_avgs[length(league_avgs)]
+league_avgs = league_avgs[-length(league_avgs)]
+
+# Function to get the go to play type for each cluster
+get_gotos = function(player) {
+  # Find which cluster number each cluster belongs to by matching 
+  ## a player from the author's list to it.
+  c = -99
+  for(i in 1:18) {
+    if(player %in% clusts[[i]]) {
+      c = i
+      break
+    }
+  }
+  if(c == -99) {return(NULL)}
+  # Calculate freq's for each play type.
+  type = colSums(df_new[clusts[[c]],])
+  type[1:(length(type)-1)] = type[1:(length(type)-1)] / type[length(type)]   
+  type = type[-length(type)]
+  
+  # Calculate which play types are "go tos"
+  go_tos = list()
+  for(i in 1:length(scores)) {
+    if(type[i] >= (league_avgs[i]+(league_avgs[i]*.5))) {
+      go_tos = c(go_tos, type[i]) 
+    }
+  }
+  
+  return(go_tos)
+}
+
+rock_poundersGT = get_gotos("Kemba Walker")
+creatorsGT = get_gotos("Kyrie Irving") 
+distGT = get_gotos("Isaiah Thomas")
+secondaryGT = get_gotos("Kevin Durant")
+glueGT = get_gotos("Nick Young")
+offballGT = get_gotos("CJ Miles")
+spotGT = get_gotos("Otto Porter Jr.")
+strechGT = get_gotos("Davis Bertans")
+pickbigsGT = get_gotos("Channing Frye")
+ballstopsGT = get_gotos("Harrison Barnes")
+pointforGT = get_gotos("LeBron James")
+relshootGT = get_gotos("Andre Iguodala")
+bigstouchGT = get_gotos("Richaun Holmes")
+skillbigsGT = get_gotos("Nikola Jokic")
+postbigsGT = get_gotos("Jonas Valanciunas")
+parastbigsGT = get_gotos("Cody Zeller")
+unskillbigsGT = get_gotos("Tyson Chandler")
+rollbigsGT = get_gotos("Montrezl Harrell")
+
+# Now get the most efficient and least efficient scorers in each group
+ppp_list = list()
+for(i in 1:length(scores)) {
+  # Only the player and possession columns
+  df_new = data[[i]][which(colnames(data[[i]]) %in% c("Player", "Poss", "Pts"))]
+  # Rename them by the player and what type of scoring it is.
+  colnames(df_new) = c("Player", paste0(scores[i], "_poss"), paste0(scores[i],"_pts"))
+  # Add the new df to the new list
+  ppp_list[[i]] = df_new
+}
+# Join all of the dataframes together
+ppp_df = join_all(ppp_list, by = "Player", type = "full")
+# Fill NA's with 0
+ppp_df[is.na(ppp_df)] = 0
+
+ppp_df[2:ncol(ppp_df)] = lapply(ppp_df[2:ncol(ppp_df)], as.numeric)
+rownames(ppp_df) = ppp_df$Player
+ppp_df = ppp_df[,-1]
+
+get_scorers = function(player) {
+  # Find which cluster number each cluster belongs to by matching 
+  ## a player from the author's list to it.
+  c = -99
+  for(i in 1:18) {
+    if(player %in% clusts[[i]]) {
+      c = i
+      break
+    }
+  }
+  if(c == -99) {return(NULL)}
+  
+  # Calculate freq's for each play type.
+  ppp = ppp_df[clusts[[c]],]
+
+  # calculate the group's ppp
+  group_ppp = colSums(ppp)
+  group_ppp_poss = sum(group_ppp[seq(1,length(group_ppp),2)])
+  group_ppp_pts = sum(group_ppp[seq(2,length(group_ppp),2)])
+  group_ppp_fn = round(group_ppp_pts / group_ppp_poss,2)
+  
+  # Now calculate each player's PPP
+  ppp$Total_Poss = rowSums(ppp[seq(1,ncol(ppp),2)])
+  ppp$Total_Points = rowSums(ppp[seq(2,ncol(ppp),2)])
+  ppp$PPP = round(ppp$Total_Points / ppp$Total_Poss,2)
+  
+  # Sort by PPP
+  ppp = ppp[with(ppp, order(-PPP)),]
+  
+  if(nrow(ppp) >= 6) {
+    most_eff = ppp[c(1:3),]
+    least_eff = ppp[c((nrow(ppp)-2):nrow(ppp)), ]
+  } else{
+    n_players = floor(nrow(ppp) / 2)
+    most_eff = ppp[c(1:n_players),]
+    least_eff = ppp[c((nrow(ppp)-n_players),nrow(ppp)),]
+  }
+  
+  return(list(group_ppp_fn, most_eff, least_eff))
+}
+
+rock_pounders = get_scorers("Kemba Walker")
+creators = get_scorers("Kyrie Irving") 
+dist = get_scorers("Isaiah Thomas")
+secondary = get_scorers("Kevin Durant")
+glue = get_scorers("Nick Young")
+offball = get_scorers("CJ Miles")
+spot = get_scorers("Otto Porter Jr.")
+strech = get_scorers("Davis Bertans")
+pickbigs = get_scorers("Channing Frye")
+ballstops = get_scorers("Harrison Barnes")
+pointfor = get_scorers("LeBron James")
+relshoot = get_scorers("Andre Iguodala")
+bigstouch = get_scorers("Richaun Holmes")
+skillbigs = get_scorers("Nikola Jokic")
+postbigs = get_scorers("Jonas Valanciunas")
+parastbigs = get_scorers("Cody Zeller")
+unskillbigs = get_scorers("Tyson Chandler")
+rollbigs = get_scorers("Montrezl Harrell")
